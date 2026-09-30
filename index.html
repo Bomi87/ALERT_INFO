@@ -362,16 +362,6 @@
       </div>
     </div>
 
-document
-  .getElementById(
-    'refreshBtn'
-  )
-  .addEventListener(
-    'click',
-    async function () {
-      ...
-    }
-  );
   </div>
 
 
@@ -947,10 +937,7 @@ document
           'Country Alerts',
           s.totalAlertCount ?? '-'
         ],
-        [
-          '기준',
-          'WINDY'
-        ]
+
       ]
     );
   }
@@ -2015,63 +2002,6 @@ document
               );
             }
           );
-      }
-    );
-
-
-  document
-    .getElementById(
-      'refreshBtn'
-    )
-    .addEventListener(
-      'click',
-      async function () {
-        const button = this;
-
-        button.disabled = true;
-        button.textContent =
-          '갱신 중...';
-
-        try {
-          await api(
-            'refreshAll'
-          );
-
-          airportLoaded = false;
-          countryLoaded = false;
-
-          const active =
-            document
-              .querySelector(
-                '.tab.active'
-              )
-              .dataset
-              .tab;
-
-          if (
-            active ===
-            'country'
-          ) {
-            await loadCountryDashboard(
-              false
-            );
-
-          } else {
-            await loadAirportDashboard(
-              false
-            );
-          }
-
-        } catch (error) {
-          alert(
-            error.message
-          );
-
-        } finally {
-          button.disabled = false;
-          button.textContent =
-            'Main Alerts 새로고침';
-        }
       }
     );
 
