@@ -8,7 +8,7 @@
     content="width=device-width, initial-scale=1.0"
   >
 
-  <title>GTMx Alerts</title>
+  <title>Alert_info</title>
 
   <style>
     :root {
@@ -355,10 +355,10 @@
 
   <div class="topbar">
     <div>
-      <h1>GTMx Alerts</h1>
+      <h1>Alert_info</h1>
 
       <div class="subtitle">
-        WINDY Schedule 기반 Airport / Country Alert
+        계획된 스케줄의 Airport / Country Alert 정보
       </div>
     </div>
 
@@ -833,7 +833,6 @@
                 item.alertError
               )
             : renderCategoryGroups(
-                item.categories,
                 item.alerts
               )
         }
@@ -1008,7 +1007,6 @@
                 item.alertError
               )
             : renderCategoryGroups(
-                item.categories,
                 item.alerts
               )
         }
@@ -1085,8 +1083,6 @@
             data.alertCount || 0,
           alerts:
             data.alerts || [],
-          categories:
-            data.categories || {},
           alertError:
             data.alertError || ''
         });
@@ -1285,7 +1281,6 @@
                 data.alertError
               )
             : renderCategoryGroups(
-                data.categories,
                 data.alerts
               )
         }
@@ -1300,25 +1295,31 @@
    * ============================================================ */
 
   function renderCategoryGroups(
-    categories,
     alerts
   ) {
+    /*
+     * 카테고리명 하드코딩 X
+     *
+     * 각 Alert의 categories[]를 확인하고
+     * 배열 전체 조합을 하나의 category key로 사용.
+     *
+     * ["Flight Planning"]
+     * → Flight Planning
+     *
+     * ["Flight Planning","Runway","ATC"]
+     * → Flight Planning, Runway, ATC
+     *
+     * 동일한 조합끼리만 한 그룹으로 묶는다.
+     */
     const groups =
-      categories &&
-      Object.keys(
-        categories
-      ).length
-        ? categories
-        : groupAlertsClient(
-            alerts || []
-          );
+      groupAlertsClient(
+        alerts || []
+      );
 
+    // Object key의 최초 등장 순서를 그대로 사용.
+    // 공항마다 실제 GTMx 응답에 등장한 category 조합이 그대로 표시됨.
     const names =
-      Object.keys(groups)
-        .sort(
-          (a,b) =>
-            a.localeCompare(b)
-        );
+      Object.keys(groups);
 
     if (!names.length) {
       return `
@@ -1384,6 +1385,30 @@
   }
 
 
+  function getCategoryKeyClient(
+    alert
+  ) {
+    const categories =
+      alert &&
+      Array.isArray(
+        alert.categories
+      )
+        ? alert.categories
+            .map(
+              value =>
+                String(
+                  value || ''
+                ).trim()
+            )
+            .filter(Boolean)
+        : [];
+
+    return categories.length
+      ? categories.join(', ')
+      : 'Other';
+  }
+
+
   function groupAlertsClient(
     alerts
   ) {
@@ -1392,21 +1417,17 @@
     (alerts || [])
       .forEach(
         alert => {
-          const cats =
-            alert.categories &&
-            alert.categories.length
-              ? alert.categories
-              : ['Other'];
+          const key =
+            getCategoryKeyClient(
+              alert
+            );
 
-          cats.forEach(
-            cat => {
-              if (!groups[cat]) {
-                groups[cat] = [];
-              }
+          if (!groups[key]) {
+            groups[key] = [];
+          }
 
-              groups[cat]
-                .push(alert);
-            }
+          groups[key].push(
+            alert
           );
         }
       );
@@ -1429,7 +1450,7 @@
           alert.startDate || '',
           alert.endDate
             ? `~ ${alert.endDate}`
-            : 'Until Further Notice'
+            : 'Not Available'
         ]
           .filter(Boolean)
           .join(' ')
