@@ -1677,7 +1677,72 @@
       }
     );
 
-    // 그룹 내 Alert는 GTMx 응답 원래 순서 유지
+    /*
+     * 모든 화면 공통 정렬:
+     * 1) 각 category group 내부 Alert를 startDate 최신순으로 정렬
+     * 2) category group 자체도 그 그룹의 최신 Alert 날짜 기준 최신순 정렬
+     *
+     * 적용 대상:
+     * - Airport Alert
+     * - Country Alert
+     * - Other Airport
+     * - Other Country
+     */
+
+    function alertTime(alert) {
+      if (
+        !alert ||
+        !alert.startDate
+      ) {
+        return 0;
+      }
+
+      const time =
+        new Date(
+          alert.startDate
+        ).getTime();
+
+      return Number.isFinite(time)
+        ? time
+        : 0;
+    }
+
+    groups.forEach(
+      group => {
+        group.alerts.sort(
+          (a,b) =>
+            alertTime(b) -
+            alertTime(a)
+        );
+
+        group.latestTime =
+          group.alerts.length
+            ? alertTime(
+                group.alerts[0]
+              )
+            : 0;
+      }
+    );
+
+    groups.sort(
+      (a,b) => {
+        if (
+          b.latestTime !==
+          a.latestTime
+        ) {
+          return (
+            b.latestTime -
+            a.latestTime
+          );
+        }
+
+        return (
+          a.firstIndex -
+          b.firstIndex
+        );
+      }
+    );
+
     return groups;
   }
 
