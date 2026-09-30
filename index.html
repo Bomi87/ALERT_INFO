@@ -828,6 +828,21 @@
         </div>
 
         ${
+          Number(
+            item.excludedCountryAlertCount ||
+            0
+          ) > 0
+            ? `<div class="note">
+                 Country Alert 중복 ${escapeHtml(
+                   String(
+                     item.excludedCountryAlertCount
+                   )
+                 )}건 제외
+               </div>`
+            : ''
+        }
+
+        ${
           item.alertError
             ? renderError(
                 item.alertError
@@ -1083,8 +1098,12 @@
             data.alertCount || 0,
           alerts:
             data.alerts || [],
+          excludedCountryAlertCount:
+            data.excludedCountryAlertCount || 0,
           alertError:
-            data.alertError || ''
+            data.alertError || '',
+          countryFilterWarning:
+            data.countryFilterWarning || ''
         });
 
     } catch (error) {
@@ -1298,30 +1317,30 @@
     alerts
   ) {
     /*
-     * 카테고리명 하드코딩 X
+     * Category 이름 하드코딩 X
      *
-     * 각 Alert의 categories[]를 확인하고
-     * 배열 전체 조합을 하나의 category key로 사용.
+     * 각 Alert의 categories[]를 실제 데이터 그대로 읽는다.
      *
-     * ["Flight Planning"]
-     * → Flight Planning
+     * 예:
+     * A = ["Flight Planning","Runway","ATC"]
+     * B = ["Flight Planning","ATC"]
      *
-     * ["Flight Planning","Runway","ATC"]
-     * → Flight Planning, Runway, ATC
+     * B는 A의 부분집합이므로 별도 그룹을 만들지 않고
+     * 화면에는 아래처럼 한 그룹으로 표시:
      *
-     * 동일한 조합끼리만 한 그룹으로 묶는다.
+     * Flight Planning, Runway, ATC
+     * 1. ...
+     * 2. ...
+     * 3. ...
+     *
+     * 공항/국가마다 categories가 달라도 자동 대응.
      */
     const groups =
-      groupAlertsClient(
+      groupAlertsByLargestCategorySet(
         alerts || []
       );
 
-    // Object key의 최초 등장 순서를 그대로 사용.
-    // 공항마다 실제 GTMx 응답에 등장한 category 조합이 그대로 표시됨.
-    const names =
-      Object.keys(groups);
-
-    if (!names.length) {
+    if (!groups.length) {
       return `
         <div class="empty">
           현재 Alert 없음
@@ -1331,12 +1350,12 @@
 
     return `
       <div class="category-list">
-        ${names
+        ${groups
           .map(
-            name =>
+            group =>
               renderCategoryBox(
-                name,
-                groups[name] || []
+                group.title,
+                group.alerts
               )
           )
           .join('')}
@@ -1385,53 +1404,280 @@
   }
 
 
-  function getCategoryKeyClient(
+  /**
+   * Alert의 category 배열을 trim + 중복 제거.
+   * 이름 자체는 하드코딩하지 않는다.
+   */
+  function getAlertCategoryArray(
     alert
   ) {
-    const categories =
+    const raw =
       alert &&
       Array.isArray(
         alert.categories
       )
         ? alert.categories
-            .map(
-              value =>
-                String(
-                  value || ''
-                ).trim()
-            )
-            .filter(Boolean)
         : [];
 
-    return categories.length
-      ? categories.join(', ')
-      : 'Other';
+    const seen = new Set();
+
+    return raw
+      .map(
+        value =>
+          String(
+            value || ''
+          ).trim()
+      )
+      .filter(
+        value => {
+          if (
+            !value ||
+            seen.has(value)
+          ) {
+            return false;
+          }
+
+          seen.add(value);
+          return true;
+        }
+      );
   }
 
 
-  function groupAlertsClient(
-    alerts
+  function makeCategorySetKey(
+    categories
   ) {
-    const groups = {};
+    // 조합 비교용 key는 순서 영향 제거.
+    return [...categories]
+      .map(
+        x => x.toLowerCase()
+      )
+      .sort()
+      .join('||');
+  }
 
-    (alerts || [])
-      .forEach(
-        alert => {
-          const key =
-            getCategoryKeyClient(
-              alert
-            );
 
-          if (!groups[key]) {
-            groups[key] = [];
-          }
+  function isCategorySubset(
+    smaller,
+    larger
+  ) {
+    if (
+      smaller.length >
+      larger.length
+    ) {
+      return false;
+    }
 
-          groups[key].push(
-            alert
-          );
-        }
+    const largeSet =
+      new Set(
+        larger.map(
+          x => x.toLowerCase()
+        )
       );
 
+    return smaller.every(
+      x =>
+        largeSet.has(
+          x.toLowerCase()
+        )
+    );
+  }
+
+
+  /**
+   * 가장 큰 category 조합을 상위 그룹으로 사용.
+   * 작은 조합이 큰 조합의 부분집합이면 큰 그룹 아래로 합친다.
+   *
+   * 동일 크기의 서로 다른 조합은 별도 그룹.
+   *
+   * 하나의 작은 조합이 여러 큰 조합의 부분집합일 경우:
+   * - category 수가 가장 많은 그룹 우선
+   * - 동일하면 GTMx 응답에서 먼저 등장한 그룹 우선
+   *
+   * 모든 Alert는 정확히 한 그룹에만 들어간다.
+   */
+  function groupAlertsByLargestCategorySet(
+    alerts
+  ) {
+    const source =
+      (alerts || [])
+        .map(
+          (alert,index) => ({
+            alert,
+            index,
+            categories:
+              getAlertCategoryArray(
+                alert
+              )
+          })
+        );
+
+    if (!source.length) {
+      return [];
+    }
+
+    // category 없는 Alert도 자동으로 Other 처리
+    source.forEach(
+      item => {
+        if (
+          !item.categories.length
+        ) {
+          item.categories = [
+            'Other'
+          ];
+        }
+      }
+    );
+
+    // 실제 등장한 고유 category 조합 수집
+    const comboMap =
+      new Map();
+
+    source.forEach(
+      item => {
+        const key =
+          makeCategorySetKey(
+            item.categories
+          );
+
+        if (
+          !comboMap.has(key)
+        ) {
+          comboMap.set(
+            key,
+            {
+              key,
+              categories:
+                item.categories,
+              firstIndex:
+                item.index
+            }
+          );
+        }
+      }
+    );
+
+    const combos =
+      [...comboMap.values()];
+
+    /*
+     * 최상위 조합:
+     * 다른 실제 조합의 strict subset이 아닌 조합.
+     *
+     * 예:
+     * ["Flight Planning","Runway","ATC"]
+     * ["Flight Planning","ATC"]
+     *
+     * 두 번째는 첫 번째의 subset이므로
+     * 최상위 그룹은 첫 번째만 남음.
+     */
+    const parents =
+      combos.filter(
+        combo =>
+          !combos.some(
+            other =>
+              other.key !==
+                combo.key &&
+              other.categories.length >
+                combo.categories.length &&
+              isCategorySubset(
+                combo.categories,
+                other.categories
+              )
+          )
+      );
+
+    // GTMx에서 처음 등장한 상위 그룹 순서 유지
+    parents.sort(
+      (a,b) =>
+        a.firstIndex -
+        b.firstIndex
+    );
+
+    const groups =
+      parents.map(
+        parent => ({
+          key:
+            parent.key,
+
+          // 표시명은 실제 GTMx categories[] 순서를 그대로 사용
+          title:
+            parent.categories
+              .join(', '),
+
+          categories:
+            parent.categories,
+
+          firstIndex:
+            parent.firstIndex,
+
+          alerts: []
+        })
+      );
+
+    // 각 Alert를 자신을 포함하는 가장 큰 상위 그룹 하나에 배정
+    source.forEach(
+      item => {
+        const candidates =
+          groups
+            .filter(
+              group =>
+                isCategorySubset(
+                  item.categories,
+                  group.categories
+                )
+            )
+            .sort(
+              (a,b) => {
+                // 더 큰 category 조합 우선
+                if (
+                  b.categories.length !==
+                  a.categories.length
+                ) {
+                  return (
+                    b.categories.length -
+                    a.categories.length
+                  );
+                }
+
+                // 같으면 먼저 등장한 실제 그룹
+                return (
+                  a.firstIndex -
+                  b.firstIndex
+                );
+              }
+            );
+
+        let target =
+          candidates[0];
+
+        // 방어적 fallback
+        if (!target) {
+          target = {
+            key:
+              makeCategorySetKey(
+                item.categories
+              ),
+            title:
+              item.categories
+                .join(', '),
+            categories:
+              item.categories,
+            firstIndex:
+              item.index,
+            alerts: []
+          };
+
+          groups.push(target);
+        }
+
+        target.alerts.push(
+          item.alert
+        );
+      }
+    );
+
+    // 그룹 내 Alert는 GTMx 응답 원래 순서 유지
     return groups;
   }
 
