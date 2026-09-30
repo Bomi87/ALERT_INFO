@@ -1,61 +1,1791 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GTMx Airport Alerts</title>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>GTMx Alerts</title>
+
   <style>
-    :root{--bg:#0b1220;--panel:#111a2b;--panel2:#162238;--border:#273753;--text:#f4f7fb;--muted:#9fb0c8;--accent:#70a5ff;--shadow:0 10px 30px rgba(0,0,0,.22)}
-    *{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at top right,rgba(71,110,180,.18),transparent 28rem),var(--bg);color:var(--text);font-family:Inter,Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-    .app{max-width:1180px;margin:0 auto;padding:28px 18px 60px}.topbar{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;margin-bottom:18px}.title h1{margin:0;font-size:25px}.title p{margin:8px 0 0;color:var(--muted);font-size:13px}
-    button,input{font:inherit}button{border:1px solid var(--border);background:var(--panel2);color:var(--text);padding:10px 14px;border-radius:10px;cursor:pointer}button:hover{filter:brightness(1.08)}button:disabled{opacity:.55;cursor:wait}
-    .tabs{display:flex;gap:8px;margin:18px 0;flex-wrap:wrap}.tab{color:var(--muted)}.tab.active{color:#fff;border-color:#4b72aa;background:#1c3254}.panel{display:none}.panel.active{display:block}.search-box{display:flex;gap:9px;margin-bottom:18px}.search-box input{flex:1;min-width:0;border:1px solid var(--border);background:#0c1525;color:var(--text);padding:12px 13px;border-radius:10px;outline:none}.search-box input:focus{border-color:var(--accent)}
-    .status{min-height:22px;margin-bottom:12px;color:var(--muted);font-size:13px}.summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px}.summary-card{background:var(--panel);border:1px solid var(--border);border-radius:13px;padding:14px;box-shadow:var(--shadow)}.summary-label{color:var(--muted);font-size:12px}.summary-value{margin-top:6px;font-size:21px;font-weight:750}
-    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.airport-card,.country-card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:15px;box-shadow:var(--shadow)}.airport-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.icao{font-size:22px;font-weight:800;letter-spacing:.4px}.airport-name{margin-top:4px;color:var(--muted);font-size:13px}.country{margin-top:11px;color:#d5e2f5;font-size:13px}.badge{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;border:1px solid var(--border);border-radius:999px;padding:5px 9px;font-size:12px;color:var(--muted);background:#0c1525}.badge.alert{color:#ffe6ac;border-color:#795d24;background:#2c2413}.badge.none{color:#a9e9c4;border-color:#276342;background:#10271c}
-    .alert-list{margin-top:13px;display:grid;gap:8px}details.alert-item{border:1px solid var(--border);border-radius:10px;background:#0d1727;overflow:hidden}details.alert-item>summary{list-style:none;cursor:pointer;padding:11px 12px}details.alert-item>summary::-webkit-details-marker{display:none}.alert-title{font-size:13px;font-weight:700}.alert-meta{margin-top:5px;color:var(--muted);font-size:11px;line-height:1.45}.alert-body{padding:0 12px 12px;color:#dce6f3;font-size:12px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}.alert-links{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}.alert-links a{color:#9dc4ff;text-decoration:none;font-size:11px;border:1px solid var(--border);border-radius:8px;padding:5px 7px}.empty,.error{border:1px dashed var(--border);border-radius:12px;padding:18px;color:var(--muted);background:rgba(17,26,43,.55)}.error{color:#ffb2b2;border-color:#693f46}.match-list{display:grid;gap:8px}.match-button{width:100%;text-align:left}.footer{margin-top:24px;color:var(--muted);font-size:11px;text-align:center}
-    @media(max-width:780px){.summary{grid-template-columns:repeat(2,minmax(0,1fr))}.grid{grid-template-columns:1fr}.topbar{flex-direction:column}}
+    :root {
+      --bg:#0b1220;
+      --panel:#111a2b;
+      --panel2:#162238;
+      --panel3:#0d1727;
+      --border:#273753;
+      --text:#f4f7fb;
+      --muted:#9fb0c8;
+      --accent:#75a7ff;
+      --good:#75d69c;
+      --warn:#ffd170;
+      --bad:#ff8888;
+    }
+
+    * {
+      box-sizing:border-box;
+    }
+
+    body {
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+
+      font-family:
+        Pretendard,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+    }
+
+    .app {
+      max-width:1220px;
+      margin:0 auto;
+      padding:26px 18px 60px;
+    }
+
+    .topbar {
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      margin-bottom:18px;
+    }
+
+    h1 {
+      margin:0;
+      font-size:26px;
+    }
+
+    .subtitle {
+      margin-top:7px;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    button,
+    input {
+      font:inherit;
+    }
+
+    button {
+      border:1px solid var(--border);
+      background:var(--panel2);
+      color:var(--text);
+      padding:10px 14px;
+      border-radius:10px;
+      cursor:pointer;
+    }
+
+    button:hover {
+      filter:brightness(1.08);
+    }
+
+    button:disabled {
+      opacity:.55;
+      cursor:wait;
+    }
+
+    .tabs {
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-bottom:18px;
+    }
+
+    .tab {
+      color:var(--muted);
+    }
+
+    .tab.active {
+      color:#fff;
+      background:#1c3254;
+      border-color:#4b72aa;
+    }
+
+    .tab.other {
+      margin-left:5px;
+    }
+
+    .panel {
+      display:none;
+    }
+
+    .panel.active {
+      display:block;
+    }
+
+    .status {
+      min-height:22px;
+      margin-bottom:12px;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    .summary {
+      display:grid;
+      grid-template-columns:
+        repeat(4,minmax(0,1fr));
+      gap:10px;
+      margin-bottom:16px;
+    }
+
+    .summary-card {
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:13px;
+      padding:14px;
+    }
+
+    .summary-label {
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    .summary-value {
+      margin-top:5px;
+      font-size:22px;
+      font-weight:800;
+    }
+
+    .grid {
+      display:grid;
+      grid-template-columns:
+        repeat(2,minmax(0,1fr));
+      gap:13px;
+    }
+
+    .entity-card {
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:15px;
+      padding:16px;
+    }
+
+    .entity-head {
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+    }
+
+    .entity-code {
+      font-size:22px;
+      font-weight:800;
+    }
+
+    .entity-name {
+      margin-top:4px;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    .entity-extra {
+      margin-top:10px;
+      color:#d4e1f3;
+      font-size:13px;
+      line-height:1.45;
+    }
+
+    .badge {
+      display:inline-flex;
+      align-items:center;
+      border:1px solid var(--border);
+      border-radius:999px;
+      padding:5px 9px;
+      font-size:12px;
+      white-space:nowrap;
+    }
+
+    .badge.alert {
+      color:#ffe5a9;
+      background:#2d2514;
+      border-color:#765d27;
+    }
+
+    .badge.none {
+      color:#a7e8c2;
+      background:#11271c;
+      border-color:#2b6244;
+    }
+
+    .category-list {
+      display:grid;
+      gap:10px;
+      margin-top:14px;
+    }
+
+    .category-box {
+      border:1px solid var(--border);
+      border-radius:11px;
+      background:var(--panel3);
+      overflow:hidden;
+    }
+
+    .category-title {
+      padding:10px 12px;
+      font-size:13px;
+      font-weight:800;
+      color:#d9e7fb;
+      background:#132039;
+      border-bottom:1px solid var(--border);
+    }
+
+    .category-alerts {
+      margin:0;
+      padding:0;
+      list-style:none;
+      counter-reset:alert-number;
+    }
+
+    .category-alert {
+      position:relative;
+      padding:12px 12px 12px 38px;
+      border-bottom:1px solid rgba(39,55,83,.75);
+      counter-increment:alert-number;
+    }
+
+    .category-alert:last-child {
+      border-bottom:0;
+    }
+
+    .category-alert::before {
+      content:counter(alert-number) ".";
+      position:absolute;
+      left:13px;
+      top:12px;
+      font-weight:800;
+      color:var(--accent);
+    }
+
+    .alert-meta {
+      color:var(--muted);
+      font-size:11px;
+      margin-bottom:7px;
+      line-height:1.4;
+    }
+
+    .alert-note {
+      white-space:pre-wrap;
+      overflow-wrap:anywhere;
+      color:#dce6f3;
+      font-size:12px;
+      line-height:1.55;
+    }
+
+    .search-box {
+      display:flex;
+      gap:8px;
+      margin-bottom:16px;
+    }
+
+    .search-box input {
+      flex:1;
+      min-width:0;
+      background:#0c1525;
+      border:1px solid var(--border);
+      color:var(--text);
+      padding:12px 13px;
+      border-radius:10px;
+      outline:none;
+    }
+
+    .search-box input:focus {
+      border-color:var(--accent);
+    }
+
+    .empty,
+    .error {
+      border:1px dashed var(--border);
+      border-radius:11px;
+      padding:15px;
+      color:var(--muted);
+      margin-top:12px;
+    }
+
+    .error {
+      color:#ffb3b3;
+      border-color:#6e4349;
+    }
+
+    .match-list {
+      display:grid;
+      gap:8px;
+    }
+
+    .match-button {
+      width:100%;
+      text-align:left;
+    }
+
+    .note {
+      margin-top:10px;
+      color:var(--muted);
+      font-size:11px;
+      line-height:1.5;
+    }
+
+    @media(max-width:820px) {
+      .summary {
+        grid-template-columns:
+          repeat(2,minmax(0,1fr));
+      }
+
+      .grid {
+        grid-template-columns:1fr;
+      }
+
+      .topbar {
+        flex-direction:column;
+      }
+
+      .tab.other {
+        margin-left:0;
+      }
+    }
   </style>
 </head>
+
 <body>
 <div class="app">
-  <div class="topbar"><div class="title"><h1>GTMx Airport Alerts</h1><p>WINDY ACJ/G650 일정 기반 해외 공항 · GTMx Country Alert</p></div><button id="refreshBtn">새로고침</button></div>
-  <div class="tabs"><button class="tab active" data-tab="dashboard">WINDY 공항</button><button class="tab" data-tab="airport">공항 ICAO 검색</button><button class="tab" data-tab="country">국가 검색</button></div>
 
-  <section id="panel-dashboard" class="panel active"><div id="dashboardStatus" class="status"></div><div id="summary" class="summary"></div><div id="airportGrid" class="grid"></div></section>
-  <section id="panel-airport" class="panel"><form id="airportForm" class="search-box"><input id="airportInput" maxlength="4" autocomplete="off" placeholder="ICAO 예: KEWR, RJTT, KLAX"/><button type="submit">검색</button></form><div id="airportStatus" class="status"></div><div id="airportResult"></div></section>
-  <section id="panel-country" class="panel"><form id="countryForm" class="search-box"><input id="countryInput" autocomplete="off" placeholder="예: Japan, JP, JPN, United States"/><button type="submit">검색</button></form><div id="countryStatus" class="status"></div><div id="countryResult"></div></section>
-  <div class="footer">GTMx token/login credentials are handled only by the Apps Script backend.</div>
+  <div class="topbar">
+    <div>
+      <h1>GTMx Alerts</h1>
+
+      <div class="subtitle">
+        WINDY Schedule 기반 Airport / Country Alert
+      </div>
+    </div>
+
+    <button id="refreshBtn">
+      Main Alerts 새로고침
+    </button>
+  </div>
+
+
+  <div class="tabs">
+
+    <button
+      class="tab active"
+      data-tab="airport"
+    >
+      Airport Alert
+    </button>
+
+    <button
+      class="tab"
+      data-tab="country"
+    >
+      Country Alert
+    </button>
+
+    <button
+      class="tab other"
+      data-tab="other-airport"
+    >
+      Other Airport
+    </button>
+
+    <button
+      class="tab"
+      data-tab="other-country"
+    >
+      Other Country
+    </button>
+
+  </div>
+
+
+  <!-- Airport Alert -->
+  <section
+    id="panel-airport"
+    class="panel active"
+  >
+    <div
+      id="airportStatus"
+      class="status"
+    ></div>
+
+    <div
+      id="airportSummary"
+      class="summary"
+    ></div>
+
+    <div
+      id="airportGrid"
+      class="grid"
+    ></div>
+  </section>
+
+
+  <!-- Country Alert -->
+  <section
+    id="panel-country"
+    class="panel"
+  >
+    <div
+      id="countryStatus"
+      class="status"
+    ></div>
+
+    <div
+      id="countrySummary"
+      class="summary"
+    ></div>
+
+    <div
+      id="countryGrid"
+      class="grid"
+    ></div>
+  </section>
+
+
+  <!-- Other Airport -->
+  <section
+    id="panel-other-airport"
+    class="panel"
+  >
+    <form
+      id="otherAirportForm"
+      class="search-box"
+    >
+      <input
+        id="otherAirportInput"
+        maxlength="4"
+        autocomplete="off"
+        placeholder="ICAO 예: UBBB, RJTT, KEWR"
+      >
+
+      <button type="submit">
+        조회
+      </button>
+    </form>
+
+    <div
+      id="otherAirportStatus"
+      class="status"
+    ></div>
+
+    <div id="otherAirportResult"></div>
+
+    <div class="note">
+      Other Airport는 WINDY Dashboard cache와 별도로 검색 시 해당 공항만 실시간 조회합니다.
+    </div>
+  </section>
+
+
+  <!-- Other Country -->
+  <section
+    id="panel-other-country"
+    class="panel"
+  >
+    <form
+      id="otherCountryForm"
+      class="search-box"
+    >
+      <input
+        id="otherCountryInput"
+        autocomplete="off"
+        placeholder="예: Japan, JP, JPN, United States"
+      >
+
+      <button type="submit">
+        조회
+      </button>
+    </form>
+
+    <div
+      id="otherCountryStatus"
+      class="status"
+    ></div>
+
+    <div id="otherCountryResult"></div>
+
+    <div class="note">
+      Other Country는 검색 시 해당 국가 Alert만 실시간 조회합니다.
+    </div>
+  </section>
+
 </div>
 
+
 <script>
-const API_URL='https://script.google.com/macros/s/AKfycbwdJw1xwLLBnALP1GxT9_2eVAAPSk13qaRKpPCUA34J8GvsOrk7ddoci0RqQna-UZlE/exec';
+  const API_URL =
+    'https://script.google.com/macros/s/AKfycbwdJw1xwLLBnALP1GxT9_2eVAAPSk13qaRKpPCUA34J8GvsOrk7ddoci0RqQna-UZlE/exec';
 
-function api(action,params={}){return new Promise((resolve,reject)=>{if(!API_URL||API_URL.includes('PASTE_YOUR_')){reject(new Error('index.html의 API_URL에 Apps Script /exec URL을 입력하세요.'));return}const callbackName='__gtmx_cb_'+Date.now()+'_'+Math.random().toString(36).slice(2);const query=new URLSearchParams({action,...params,callback:callbackName});const script=document.createElement('script');let finished=false;const timer=setTimeout(()=>{cleanup();reject(new Error('Backend 응답 시간이 초과되었습니다.'))},45000);function cleanup(){if(finished)return;finished=true;clearTimeout(timer);try{delete window[callbackName]}catch(_){window[callbackName]=undefined}script.remove()}window[callbackName]=data=>{cleanup();if(!data||data.success!==true){reject(new Error(data&&data.error?data.error:'Backend 오류'));return}resolve(data)};script.onerror=()=>{cleanup();reject(new Error('Backend 연결에 실패했습니다.'))};script.src=API_URL+(API_URL.includes('?')?'&':'?')+query.toString();document.head.appendChild(script)})}
 
-async function loadDashboard(force=false){const status=document.getElementById('dashboardStatus'),grid=document.getElementById('airportGrid'),summary=document.getElementById('summary'),refreshBtn=document.getElementById('refreshBtn');status.textContent=force?'GTMx에서 최신 자료를 다시 확인하고 있습니다...':'WINDY 스케줄과 GTMx Alert를 불러오고 있습니다...';grid.innerHTML='';summary.innerHTML='';refreshBtn.disabled=true;try{const data=await api('dashboard',force?{force:'1'}:{});renderSummary(data.summary||{});renderAirportGrid(data.airports||[]);status.textContent=[formatDateTime(data.generatedAt),data.fromCache?'캐시':'최신 조회'].join(' · ')}catch(error){status.textContent='';grid.innerHTML=renderError(error.message)}finally{refreshBtn.disabled=false}}
+  let airportLoaded = false;
+  let countryLoaded = false;
 
-function renderSummary(summary){const el=document.getElementById('summary');const items=[['해외 공항',summary.airportCount??'-'],['확인 국가',summary.countryCount??'-'],['Schedule Legs',summary.legCount??'-'],['Alert 표시 건수',summary.totalAlertInstances??'-']];el.innerHTML=items.map(([label,value])=>`<div class="summary-card"><div class="summary-label">${escapeHtml(label)}</div><div class="summary-value">${escapeHtml(String(value))}</div></div>`).join('')}
-function renderAirportGrid(airports){const grid=document.getElementById('airportGrid');if(!airports.length){grid.innerHTML='<div class="empty">WINDY 스케줄에서 RK를 제외한 해외 공항이 없습니다.</div>';return}grid.innerHTML=airports.map(renderAirportCard).join('')}
-function renderAirportCard(item){if(!item.found)return `<article class="airport-card"><div class="airport-head"><div><div class="icao">${escapeHtml(item.icao)}</div><div class="airport-name">GTMx 공항 검색 결과 없음</div></div><span class="badge">NOT FOUND</span></div></article>`;const alertBadge=item.alertCount>0?`<span class="badge alert">ALERT ${item.alertCount}</span>`:`<span class="badge none">NO ALERT</span>`;return `<article class="airport-card"><div class="airport-head"><div><div class="icao">${escapeHtml(item.icao)}</div><div class="airport-name">${escapeHtml(item.airportName||'')}${item.iata?` · ${escapeHtml(item.iata)}`:''}</div></div>${alertBadge}</div><div class="country">${escapeHtml(item.countryName||'')}${item.code3?` · ${escapeHtml(item.code3)}`:''}</div>${item.alertError?`<div class="error" style="margin-top:12px">Alert 조회 오류: ${escapeHtml(item.alertError)}</div>`:renderAlerts(item.alerts||[])}</article>`}
-function renderAlerts(alerts){if(!alerts.length)return '<div class="alert-list"><div class="empty">현재 GTMx Country Alert 없음</div></div>';return `<div class="alert-list">${alerts.map(renderAlertItem).join('')}</div>`}
-function renderAlertItem(alert){const categories=(alert.categories||[]).join(', '),types=(alert.types||[]).join(', '),title=categories||types||(alert.alertId?`Alert ${alert.alertId}`:'Country Alert'),dateText=[alert.startDate||'',alert.endDate?`~ ${alert.endDate}`:'Until Further Notice'].filter(Boolean).join(' '),links=(alert.links||[]).map((url,index)=>`<a href="${escapeAttribute(url)}" target="_blank" rel="noopener noreferrer">Source ${index+1}</a>`).join('');return `<details class="alert-item"><summary><div class="alert-title">${escapeHtml(title)}</div><div class="alert-meta">${escapeHtml(dateText)}${types?` · ${escapeHtml(types)}`:''}</div></summary><div class="alert-body">${escapeHtml(alert.noteText||'')}${links?`<div class="alert-links">${links}</div>`:''}</div></details>`}
 
-async function runAirportSearch(){const input=document.getElementById('airportInput'),resultEl=document.getElementById('airportResult'),status=document.getElementById('airportStatus'),icao=input.value.trim().toUpperCase();if(!/^[A-Z0-9]{4}$/.test(icao)){resultEl.innerHTML=renderError('ICAO 공항코드 4자리를 입력하세요.');return}status.textContent=`${icao} 조회 중...`;resultEl.innerHTML='';try{const data=await api('airport',{icao});if(!data.found){resultEl.innerHTML=`<div class="empty">${escapeHtml(icao)} 검색 결과가 없습니다.</div>`;return}resultEl.innerHTML=renderAirportCard({...data.airport,found:true,alertCount:data.alertCount||0,alerts:data.alerts||[],alertError:data.alertError||''})}catch(error){resultEl.innerHTML=renderError(error.message)}finally{status.textContent=''}}
+  function api(
+    action,
+    params = {}
+  ) {
+    return new Promise(
+      (resolve,reject) => {
+        const callback =
+          '__gtmx_' +
+          Date.now() +
+          '_' +
+          Math.random()
+            .toString(36)
+            .slice(2);
 
-async function runCountrySearch(overrideQuery){const input=document.getElementById('countryInput'),resultEl=document.getElementById('countryResult'),status=document.getElementById('countryStatus'),query=String(overrideQuery!=null?overrideQuery:input.value).trim();if(!query){resultEl.innerHTML=renderError('국가명 또는 국가코드를 입력하세요.');return}input.value=query;status.textContent=`${query} 조회 중...`;resultEl.innerHTML='';try{const data=await api('country',{country:query});if(!data.found){const matches=data.matches||[];if(!matches.length){resultEl.innerHTML='<div class="empty">일치하는 국가가 없습니다.</div>';return}resultEl.innerHTML=`<div class="match-list">${matches.map(item=>`<button class="match-button" data-country-id="${escapeAttribute(String(item.countryId||''))}">${escapeHtml(item.name)} · ${escapeHtml(item.code||'')} / ${escapeHtml(item.code3||'')}</button>`).join('')}</div>`;resultEl.querySelectorAll('[data-country-id]').forEach(button=>button.addEventListener('click',()=>runCountrySearch(button.dataset.countryId)));return}const country=data.country||{};resultEl.innerHTML=`<article class="country-card"><div class="airport-head"><div><div class="icao">${escapeHtml(country.name||'')}</div><div class="airport-name">${escapeHtml(country.code||'')}${country.code3?` · ${escapeHtml(country.code3)}`:''}${country.countryId?` · ID ${escapeHtml(String(country.countryId))}`:''}</div></div>${data.alertCount>0?`<span class="badge alert">ALERT ${data.alertCount}</span>`:`<span class="badge none">NO ALERT</span>`}</div>${data.alertError?`<div class="error" style="margin-top:12px">${escapeHtml(data.alertError)}</div>`:renderAlerts(data.alerts||[])}</article>`}catch(error){resultEl.innerHTML=renderError(error.message)}finally{status.textContent=''}}
+        const query =
+          new URLSearchParams({
+            action,
+            ...params,
+            callback
+          });
 
-function switchTab(name){document.querySelectorAll('.tab').forEach(el=>el.classList.toggle('active',el.dataset.tab===name));document.querySelectorAll('.panel').forEach(el=>el.classList.toggle('active',el.id===`panel-${name}`))}
-function renderError(message){return `<div class="error">${escapeHtml(message||'오류')}</div>`}
-function formatDateTime(value){if(!value)return'';const date=new Date(value);if(Number.isNaN(date.getTime()))return value;return new Intl.DateTimeFormat('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(date)}
-function escapeHtml(value){return String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
-function escapeAttribute(value){return escapeHtml(value).replace(/`/g,'&#96;')}
+        const script =
+          document
+            .createElement(
+              'script'
+            );
 
-document.querySelectorAll('.tab').forEach(button=>button.addEventListener('click',()=>switchTab(button.dataset.tab)));
-document.getElementById('refreshBtn').addEventListener('click',()=>loadDashboard(true));
-document.getElementById('airportForm').addEventListener('submit',event=>{event.preventDefault();runAirportSearch()});
-document.getElementById('countryForm').addEventListener('submit',event=>{event.preventDefault();runCountrySearch()});
-document.getElementById('airportInput').addEventListener('input',event=>{event.target.value=event.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4)});
-loadDashboard(false);
+        let finished = false;
+
+        const timer =
+          setTimeout(
+            () => {
+              cleanup();
+
+              reject(
+                new Error(
+                  'Backend 응답 시간이 초과되었습니다.'
+                )
+              );
+            },
+            45000
+          );
+
+        function cleanup() {
+          if (finished) {
+            return;
+          }
+
+          finished = true;
+          clearTimeout(timer);
+
+          try {
+            delete window[
+              callback
+            ];
+          } catch (_) {
+            window[
+              callback
+            ] = undefined;
+          }
+
+          script.remove();
+        }
+
+
+        window[
+          callback
+        ] = function (data) {
+          cleanup();
+
+          if (
+            !data ||
+            data.success !== true
+          ) {
+            reject(
+              new Error(
+                data &&
+                data.error
+                  ? data.error
+                  : 'Backend 오류'
+              )
+            );
+
+            return;
+          }
+
+          resolve(data);
+        };
+
+
+        script.onerror =
+          function () {
+            cleanup();
+
+            reject(
+              new Error(
+                'Backend 연결에 실패했습니다.'
+              )
+            );
+          };
+
+
+        script.src =
+          API_URL +
+          '?' +
+          query.toString();
+
+        document.head
+          .appendChild(
+            script
+          );
+      }
+    );
+  }
+
+
+  /* ============================================================
+   * MAIN AIRPORT
+   * ============================================================ */
+
+  async function loadAirportDashboard(
+    force = false
+  ) {
+    const status =
+      document.getElementById(
+        'airportStatus'
+      );
+
+    const grid =
+      document.getElementById(
+        'airportGrid'
+      );
+
+    status.textContent =
+      force
+        ? 'Airport Alert 최신 조회 중...'
+        : 'Airport Alert 불러오는 중...';
+
+    grid.innerHTML = '';
+
+    try {
+      const data =
+        await api(
+          'airportDashboard',
+          force
+            ? {force:'1'}
+            : {}
+        );
+
+      renderAirportSummary(
+        data.summary || {}
+      );
+
+      renderAirportGrid(
+        data.airports || []
+      );
+
+      status.textContent =
+        formatDateTime(
+          data.generatedAt
+        ) +
+        (
+          data.fromCache
+            ? ' · Cache'
+            : ' · Latest'
+        );
+
+      airportLoaded = true;
+
+    } catch (error) {
+      status.textContent = '';
+
+      grid.innerHTML =
+        renderError(
+          error.message
+        );
+    }
+  }
+
+
+  function renderAirportSummary(
+    s
+  ) {
+    renderSummary(
+      'airportSummary',
+      [
+        [
+          '해외 공항',
+          s.airportCount ?? '-'
+        ],
+        [
+          'Alert 있는 공항',
+          s.airportWithAlertCount
+            ?? '-'
+        ],
+        [
+          'Schedule Legs',
+          s.legCount ?? '-'
+        ],
+        [
+          'Airport Alerts',
+          s.totalAlertCount ?? '-'
+        ]
+      ]
+    );
+  }
+
+
+  function renderAirportGrid(
+    airports
+  ) {
+    const grid =
+      document.getElementById(
+        'airportGrid'
+      );
+
+    if (!airports.length) {
+      grid.innerHTML =
+        `<div class="empty">
+          WINDY Schedule에서 RK를 제외한 해외공항이 없습니다.
+        </div>`;
+
+      return;
+    }
+
+    grid.innerHTML =
+      airports
+        .map(
+          renderAirportCard
+        )
+        .join('');
+  }
+
+
+  function renderAirportCard(
+    item
+  ) {
+    if (!item.found) {
+      return `
+        <article class="entity-card">
+          <div class="entity-head">
+            <div>
+              <div class="entity-code">
+                ${escapeHtml(
+                  item.icao
+                )}
+              </div>
+
+              <div class="entity-name">
+                GTMx 공항 검색 결과 없음
+              </div>
+            </div>
+
+            <span class="badge">
+              NOT FOUND
+            </span>
+          </div>
+        </article>
+      `;
+    }
+
+    return `
+      <article class="entity-card">
+
+        <div class="entity-head">
+          <div>
+            <div class="entity-code">
+              ${escapeHtml(
+                item.icao
+              )}
+            </div>
+
+            <div class="entity-name">
+              ${escapeHtml(
+                item.airportName || ''
+              )}
+              ${
+                item.iata
+                  ? ` · ${escapeHtml(
+                      item.iata
+                    )}`
+                  : ''
+              }
+            </div>
+          </div>
+
+          ${alertBadge(
+            item.alertCount
+          )}
+        </div>
+
+        <div class="entity-extra">
+          ${escapeHtml(
+            item.countryName || ''
+          )}
+          ${
+            item.code3
+              ? ` · ${escapeHtml(
+                  item.code3
+                )}`
+              : ''
+          }
+        </div>
+
+        ${
+          item.alertError
+            ? renderError(
+                item.alertError
+              )
+            : renderCategoryGroups(
+                item.categories,
+                item.alerts
+              )
+        }
+
+      </article>
+    `;
+  }
+
+
+  /* ============================================================
+   * MAIN COUNTRY
+   * ============================================================ */
+
+  async function loadCountryDashboard(
+    force = false
+  ) {
+    const status =
+      document.getElementById(
+        'countryStatus'
+      );
+
+    const grid =
+      document.getElementById(
+        'countryGrid'
+      );
+
+    status.textContent =
+      force
+        ? 'Country Alert 최신 조회 중...'
+        : 'Country Alert 불러오는 중...';
+
+    grid.innerHTML = '';
+
+    try {
+      const data =
+        await api(
+          'countryDashboard',
+          force
+            ? {force:'1'}
+            : {}
+        );
+
+      renderCountrySummary(
+        data.summary || {}
+      );
+
+      renderCountryGrid(
+        data.countries || []
+      );
+
+      status.textContent =
+        formatDateTime(
+          data.generatedAt
+        ) +
+        (
+          data.fromCache
+            ? ' · Cache'
+            : ' · Latest'
+        );
+
+      countryLoaded = true;
+
+    } catch (error) {
+      status.textContent = '';
+
+      grid.innerHTML =
+        renderError(
+          error.message
+        );
+    }
+  }
+
+
+  function renderCountrySummary(
+    s
+  ) {
+    renderSummary(
+      'countrySummary',
+      [
+        [
+          '고유 국가',
+          s.countryCount ?? '-'
+        ],
+        [
+          'Alert 있는 국가',
+          s.countryWithAlertCount
+            ?? '-'
+        ],
+        [
+          'Country Alerts',
+          s.totalAlertCount ?? '-'
+        ],
+        [
+          '기준',
+          'WINDY'
+        ]
+      ]
+    );
+  }
+
+
+  function renderCountryGrid(
+    countries
+  ) {
+    const grid =
+      document.getElementById(
+        'countryGrid'
+      );
+
+    if (!countries.length) {
+      grid.innerHTML =
+        `<div class="empty">
+          WINDY Schedule 해외공항에서 확인된 국가가 없습니다.
+        </div>`;
+
+      return;
+    }
+
+    grid.innerHTML =
+      countries
+        .map(
+          renderCountryCard
+        )
+        .join('');
+  }
+
+
+  function renderCountryCard(
+    item
+  ) {
+    return `
+      <article class="entity-card">
+
+        <div class="entity-head">
+          <div>
+            <div class="entity-code">
+              ${escapeHtml(
+                item.countryName || ''
+              )}
+            </div>
+
+            <div class="entity-name">
+              ${escapeHtml(
+                item.code || ''
+              )}
+              ${
+                item.code3
+                  ? ` · ${escapeHtml(
+                      item.code3
+                    )}`
+                  : ''
+              }
+            </div>
+          </div>
+
+          ${alertBadge(
+            item.alertCount
+          )}
+        </div>
+
+        <div class="entity-extra">
+          Schedule Airports:
+          ${escapeHtml(
+            (item.airports || [])
+              .join(', ')
+          )}
+        </div>
+
+        ${
+          item.alertError
+            ? renderError(
+                item.alertError
+              )
+            : renderCategoryGroups(
+                item.categories,
+                item.alerts
+              )
+        }
+
+      </article>
+    `;
+  }
+
+
+  /* ============================================================
+   * OTHER AIRPORT
+   * ============================================================ */
+
+  async function searchOtherAirport() {
+    const input =
+      document.getElementById(
+        'otherAirportInput'
+      );
+
+    const status =
+      document.getElementById(
+        'otherAirportStatus'
+      );
+
+    const result =
+      document.getElementById(
+        'otherAirportResult'
+      );
+
+    const icao =
+      input.value
+        .trim()
+        .toUpperCase();
+
+    if (
+      !/^[A-Z0-9]{4}$/
+        .test(icao)
+    ) {
+      result.innerHTML =
+        renderError(
+          'ICAO 공항코드 4자리를 입력하세요.'
+        );
+
+      return;
+    }
+
+    status.textContent =
+      `${icao} 실시간 조회 중...`;
+
+    result.innerHTML = '';
+
+    try {
+      const data =
+        await api(
+          'otherAirport',
+          {icao}
+        );
+
+      if (!data.found) {
+        result.innerHTML =
+          `<div class="empty">
+            ${escapeHtml(icao)}
+            공항을 찾지 못했습니다.
+          </div>`;
+
+        return;
+      }
+
+      result.innerHTML =
+        renderAirportCard({
+          ...data.airport,
+          found:true,
+          alertCount:
+            data.alertCount || 0,
+          alerts:
+            data.alerts || [],
+          categories:
+            data.categories || {},
+          alertError:
+            data.alertError || ''
+        });
+
+    } catch (error) {
+      result.innerHTML =
+        renderError(
+          error.message
+        );
+
+    } finally {
+      status.textContent = '';
+    }
+  }
+
+
+  /* ============================================================
+   * OTHER COUNTRY
+   * ============================================================ */
+
+  async function searchOtherCountry(
+    overrideQuery
+  ) {
+    const input =
+      document.getElementById(
+        'otherCountryInput'
+      );
+
+    const status =
+      document.getElementById(
+        'otherCountryStatus'
+      );
+
+    const result =
+      document.getElementById(
+        'otherCountryResult'
+      );
+
+    const query =
+      String(
+        overrideQuery != null
+          ? overrideQuery
+          : input.value
+      ).trim();
+
+    if (!query) {
+      result.innerHTML =
+        renderError(
+          '국가명 또는 국가코드를 입력하세요.'
+        );
+
+      return;
+    }
+
+    input.value = query;
+
+    status.textContent =
+      `${query} 실시간 조회 중...`;
+
+    result.innerHTML = '';
+
+    try {
+      const data =
+        await api(
+          'otherCountry',
+          {
+            country:query
+          }
+        );
+
+      if (!data.found) {
+        const matches =
+          data.matches || [];
+
+        if (!matches.length) {
+          result.innerHTML =
+            `<div class="empty">
+              일치하는 국가가 없습니다.
+            </div>`;
+
+          return;
+        }
+
+        result.innerHTML = `
+          <div class="match-list">
+            ${matches
+              .map(
+                item => `
+                  <button
+                    type="button"
+                    class="match-button"
+                    data-country-id="${escapeAttr(
+                      String(
+                        item.countryId ||
+                        ''
+                      )
+                    )}"
+                  >
+                    ${escapeHtml(
+                      item.name
+                    )}
+                    ·
+                    ${escapeHtml(
+                      item.code || ''
+                    )}
+                    /
+                    ${escapeHtml(
+                      item.code3 || ''
+                    )}
+                  </button>
+                `
+              )
+              .join('')}
+          </div>
+        `;
+
+        result
+          .querySelectorAll(
+            '[data-country-id]'
+          )
+          .forEach(
+            button => {
+              button
+                .addEventListener(
+                  'click',
+                  () => {
+                    searchOtherCountry(
+                      button
+                        .dataset
+                        .countryId
+                    );
+                  }
+                );
+            }
+          );
+
+        return;
+      }
+
+      result.innerHTML =
+        renderOtherCountryCard(
+          data
+        );
+
+    } catch (error) {
+      result.innerHTML =
+        renderError(
+          error.message
+        );
+
+    } finally {
+      status.textContent = '';
+    }
+  }
+
+
+  function renderOtherCountryCard(
+    data
+  ) {
+    const item =
+      data.country || {};
+
+    return `
+      <article class="entity-card">
+
+        <div class="entity-head">
+          <div>
+            <div class="entity-code">
+              ${escapeHtml(
+                item.countryName || ''
+              )}
+            </div>
+
+            <div class="entity-name">
+              ${escapeHtml(
+                item.code || ''
+              )}
+              ${
+                item.code3
+                  ? ` · ${escapeHtml(
+                      item.code3
+                    )}`
+                  : ''
+              }
+            </div>
+          </div>
+
+          ${alertBadge(
+            data.alertCount
+          )}
+        </div>
+
+        ${
+          data.alertError
+            ? renderError(
+                data.alertError
+              )
+            : renderCategoryGroups(
+                data.categories,
+                data.alerts
+              )
+        }
+
+      </article>
+    `;
+  }
+
+
+  /* ============================================================
+   * CATEGORY GROUP RENDER
+   * ============================================================ */
+
+  function renderCategoryGroups(
+    categories,
+    alerts
+  ) {
+    const groups =
+      categories &&
+      Object.keys(
+        categories
+      ).length
+        ? categories
+        : groupAlertsClient(
+            alerts || []
+          );
+
+    const names =
+      Object.keys(groups)
+        .sort(
+          (a,b) =>
+            a.localeCompare(b)
+        );
+
+    if (!names.length) {
+      return `
+        <div class="empty">
+          현재 Alert 없음
+        </div>
+      `;
+    }
+
+    return `
+      <div class="category-list">
+        ${names
+          .map(
+            name =>
+              renderCategoryBox(
+                name,
+                groups[name] || []
+              )
+          )
+          .join('')}
+      </div>
+    `;
+  }
+
+
+  function renderCategoryBox(
+    category,
+    alerts
+  ) {
+    return `
+      <section class="category-box">
+
+        <div class="category-title">
+          ${escapeHtml(
+            category
+          )}
+        </div>
+
+        <ol class="category-alerts">
+          ${alerts
+            .map(
+              alert => `
+                <li class="category-alert">
+
+                  <div class="alert-meta">
+                    ${renderAlertMeta(
+                      alert
+                    )}
+                  </div>
+
+                  <div class="alert-note">${escapeHtml(
+                    alert.noteText || ''
+                  )}</div>
+
+                </li>
+              `
+            )
+            .join('')}
+        </ol>
+
+      </section>
+    `;
+  }
+
+
+  function groupAlertsClient(
+    alerts
+  ) {
+    const groups = {};
+
+    (alerts || [])
+      .forEach(
+        alert => {
+          const cats =
+            alert.categories &&
+            alert.categories.length
+              ? alert.categories
+              : ['Other'];
+
+          cats.forEach(
+            cat => {
+              if (!groups[cat]) {
+                groups[cat] = [];
+              }
+
+              groups[cat]
+                .push(alert);
+            }
+          );
+        }
+      );
+
+    return groups;
+  }
+
+
+  function renderAlertMeta(
+    alert
+  ) {
+    const parts = [];
+
+    if (
+      alert.startDate ||
+      alert.endDate
+    ) {
+      parts.push(
+        [
+          alert.startDate || '',
+          alert.endDate
+            ? `~ ${alert.endDate}`
+            : 'Until Further Notice'
+        ]
+          .filter(Boolean)
+          .join(' ')
+      );
+    }
+
+    if (
+      alert.types &&
+      alert.types.length
+    ) {
+      parts.push(
+        alert.types.join(', ')
+      );
+    }
+
+    if (
+      alert.alertId
+    ) {
+      parts.push(
+        `ID ${alert.alertId}`
+      );
+    }
+
+    return escapeHtml(
+      parts.join(' · ')
+    );
+  }
+
+
+  /* ============================================================
+   * COMMON UI
+   * ============================================================ */
+
+  function alertBadge(
+    count
+  ) {
+    const n =
+      Number(count || 0);
+
+    return n > 0
+      ? `<span class="badge alert">
+           ALERT ${n}
+         </span>`
+      : `<span class="badge none">
+           NO ALERT
+         </span>`;
+  }
+
+
+  function renderSummary(
+    elementId,
+    items
+  ) {
+    document
+      .getElementById(
+        elementId
+      )
+      .innerHTML =
+        items
+          .map(
+            ([label,value]) => `
+              <div class="summary-card">
+
+                <div class="summary-label">
+                  ${escapeHtml(
+                    label
+                  )}
+                </div>
+
+                <div class="summary-value">
+                  ${escapeHtml(
+                    String(value)
+                  )}
+                </div>
+
+              </div>
+            `
+          )
+          .join('');
+  }
+
+
+  function switchTab(
+    name
+  ) {
+    document
+      .querySelectorAll(
+        '.tab'
+      )
+      .forEach(
+        el => {
+          el.classList
+            .toggle(
+              'active',
+              el.dataset.tab ===
+                name
+            );
+        }
+      );
+
+    document
+      .querySelectorAll(
+        '.panel'
+      )
+      .forEach(
+        el => {
+          el.classList
+            .toggle(
+              'active',
+              el.id ===
+                `panel-${name}`
+            );
+        }
+      );
+
+    if (
+      name === 'airport' &&
+      !airportLoaded
+    ) {
+      loadAirportDashboard(
+        false
+      );
+    }
+
+    if (
+      name === 'country' &&
+      !countryLoaded
+    ) {
+      loadCountryDashboard(
+        false
+      );
+    }
+  }
+
+
+  function renderError(
+    message
+  ) {
+    return `
+      <div class="error">
+        ${escapeHtml(
+          message || '오류'
+        )}
+      </div>
+    `;
+  }
+
+
+  function formatDateTime(
+    value
+  ) {
+    if (!value) {
+      return '';
+    }
+
+    const date =
+      new Date(value);
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+      return value;
+    }
+
+    return new Intl
+      .DateTimeFormat(
+        'ko-KR',
+        {
+          year:'numeric',
+          month:'2-digit',
+          day:'2-digit',
+          hour:'2-digit',
+          minute:'2-digit',
+          second:'2-digit',
+          hour12:false
+        }
+      )
+      .format(date);
+  }
+
+
+  function escapeHtml(
+    value
+  ) {
+    return String(
+      value ?? ''
+    )
+      .replace(
+        /&/g,
+        '&amp;'
+      )
+      .replace(
+        /</g,
+        '&lt;'
+      )
+      .replace(
+        />/g,
+        '&gt;'
+      )
+      .replace(
+        /"/g,
+        '&quot;'
+      )
+      .replace(
+        /'/g,
+        '&#39;'
+      );
+  }
+
+
+  function escapeAttr(
+    value
+  ) {
+    return escapeHtml(
+      value
+    )
+      .replace(
+        /`/g,
+        '&#96;'
+      );
+  }
+
+
+  /* ============================================================
+   * EVENTS
+   * ============================================================ */
+
+  document
+    .querySelectorAll(
+      '.tab'
+    )
+    .forEach(
+      button => {
+        button
+          .addEventListener(
+            'click',
+            () => {
+              switchTab(
+                button
+                  .dataset
+                  .tab
+              );
+            }
+          );
+      }
+    );
+
+
+  document
+    .getElementById(
+      'refreshBtn'
+    )
+    .addEventListener(
+      'click',
+      async function () {
+        const button = this;
+
+        button.disabled = true;
+        button.textContent =
+          '갱신 중...';
+
+        try {
+          await api(
+            'refreshAll'
+          );
+
+          airportLoaded = false;
+          countryLoaded = false;
+
+          const active =
+            document
+              .querySelector(
+                '.tab.active'
+              )
+              .dataset
+              .tab;
+
+          if (
+            active ===
+            'country'
+          ) {
+            await loadCountryDashboard(
+              false
+            );
+
+          } else {
+            await loadAirportDashboard(
+              false
+            );
+          }
+
+        } catch (error) {
+          alert(
+            error.message
+          );
+
+        } finally {
+          button.disabled = false;
+          button.textContent =
+            'Main Alerts 새로고침';
+        }
+      }
+    );
+
+
+  document
+    .getElementById(
+      'otherAirportForm'
+    )
+    .addEventListener(
+      'submit',
+      event => {
+        event.preventDefault();
+        searchOtherAirport();
+      }
+    );
+
+
+  document
+    .getElementById(
+      'otherAirportInput'
+    )
+    .addEventListener(
+      'input',
+      event => {
+        event.target.value =
+          event.target.value
+            .toUpperCase()
+            .replace(
+              /[^A-Z0-9]/g,
+              ''
+            )
+            .slice(0,4);
+      }
+    );
+
+
+  document
+    .getElementById(
+      'otherCountryForm'
+    )
+    .addEventListener(
+      'submit',
+      event => {
+        event.preventDefault();
+        searchOtherCountry();
+      }
+    );
+
+
+  // 최초 화면
+  loadAirportDashboard(
+    false
+  );
 </script>
 </body>
 </html>
