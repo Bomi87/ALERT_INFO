@@ -351,6 +351,20 @@
 </head>
 
 <body>
+<div id="authScreen" style="
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  background:#0b1220;
+  color:#f4f7fb;
+  font-family:Pretendard,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+">
+  승인 확인 중...
+</div>
+
+<div id="appRoot" style="display:none;">
 <div class="app">
 
   <div class="topbar">
@@ -518,6 +532,7 @@
 
   let airportLoaded = false;
   let countryLoaded = false;
+  let ALERT_APP_STARTED = false;
 
 
   function api(
@@ -2051,10 +2066,48 @@
     );
 
 
-  // 최초 화면
-  loadAirportDashboard(
-    false
-  );
+  // ============================================================
+  // PORTAL GOOGLE / GMAIL AUTH 연동
+  // common-auth.js가 인증 및 현재 앱 권한 확인을 완료한 뒤에만
+  // Alert_info의 최초 Dashboard를 실행한다.
+  // ============================================================
+
+  function startAlertAppAfterAuth() {
+    if (ALERT_APP_STARTED) {
+      return;
+    }
+
+    ALERT_APP_STARTED = true;
+
+    // 기존 최초 화면 동작 유지
+    loadAirportDashboard(
+      false
+    );
+  }
+
+
+  (function waitForPortalAuth() {
+    // common-auth.js가 현재 앱 권한을 확인한 경우에만 실행
+    if (window.CURRENT_PORTAL_USER) {
+      startAlertAppAfterAuth();
+      return;
+    }
+
+    setTimeout(
+      waitForPortalAuth,
+      200
+    );
+  })();
 </script>
+
+</div>
+
+<script
+  src="https://accounts.google.com/gsi/client"
+  async
+  defer
+></script>
+
+<script src="https://bomi87.github.io/SK-Aviation-portal/common-auth.js"></script>
 </body>
 </html>
